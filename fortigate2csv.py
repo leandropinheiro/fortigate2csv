@@ -14,14 +14,17 @@ def edit(cli: list, quote: bool = False):
     for x in range(2, len(cli)):
         str_edit = str_edit + ' ' + cli[x]
     
-    if quote == False: str_edit = str_edit.replace('"', '')
-    
+    if not quote: str_edit = str_edit.replace('"', '')
+    if quote:
+        if not str_edit.startswith('"'): str_edit = '"' + str_edit
+        if not str_edit.endswith('"'): str_edit = str_edit + '"'
+
     return str_edit
 
 def set(cli: list, header: str = None, quote: bool = False, tab: bool = False, tab_len: int = 0, newline: bool = False, case: str = None):
     
     str_var = ''
-    if quote == True: str_var = '"'
+    #if quote == True: str_var = '"'
     if header: str_var += header + ' '
 
     if tab == True and tab_len > 0:
@@ -46,10 +49,13 @@ def set(cli: list, header: str = None, quote: bool = False, tab: bool = False, t
             if not len(cli) <= 3:
                 str_var += ' '
             bol_tab = False
-    
-    str_var
+            if newline and x == (len(cli)-1):
+                str_var += '\n'
 
-    if newline == True: str_var += '\n'
+    if not quote: str_var = str_var.replace('"', '')
+    if quote:
+        if not str_var.startswith('"'): str_var = '"' + str_var
+        if not str_var.endswith('"'): str_var = str_var + '"'
 
     return str_var
 

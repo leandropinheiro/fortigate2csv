@@ -6,7 +6,7 @@ import importlib.util
 from pathlib import Path
 from fortigate2csv import *
 
-parser = argparse.ArgumentParser(description='Transforma CLI FortiGate IPv4 Object Application List Group para CSV')
+parser = argparse.ArgumentParser(description='Transforma CLI FortiGate IPv4 Object Webfilter Content para CSV')
 parser.add_argument('File', metavar='In_File', type=str, help='Arquivo com os comandos exportados do Fortigate')
 parser.add_argument('-o', metavar='Out_File', dest='Output', help='Define o file name de saída, padrão [In_File].csv')
 
@@ -32,22 +32,24 @@ print("Processando:", Input, "\n")
 with open(Input) as In:
     line = In.readline() # Le a primeira linha
     
-    line_out = '"EDIT";"OPTIONS";"ENTRIES"'
+    line_out = '"EDIT";"NAME";"ENTRIES"'
     buffer_out = []
     buffer_out.append(line_out)
 
     print("buffer:", buffer_out, "\n")
-    
+
     inedit = False
+    pattern = False
+    status = False
+    lang = False
     action = False
-    log = False
 
     while line:
         cli = line.lstrip(' ')
         command = cli.split()    
 
         if command[0] == 'config': 
-            if not inedit: config(cli, 'config application list')
+            if not inedit: config(cli, 'config webfilter content')
 
         elif command[0] == 'end': 
             if not inedit:
@@ -56,53 +58,53 @@ with open(Input) as In:
                 inedit = False
         elif command[0] == 'next':
             if not inedit:
-                if obj_options == '': obj_options = '-'
                 line_out = obj_edit
-                line_out = line_out + ';"' + obj_options.rstrip(' \n') + '"'
+                line_out = line_out + ';' + obj_name
                 line_out = line_out + ';"' + obj_entries.rstrip(' \n') + '"'
                 buffer_out.append(line_out)
                 inedit = False
             else:
+                if not pattern: obj_entries += 'Pattern Type: WILDCARD\n'
+                if not status: obj_entries += 'Status: DISABLE\n'
+                if not lang: obj_entries += 'Language: WESTERN\n'
                 if not action: obj_entries += 'Action: BLOCK\n'
-                if not log: obj_entries += 'Log: ENABLED\n'
 
         elif command[0] == 'edit':
             if not inedit:
+                pattern = False
+                status = False
+                lang = False
                 action = False
-                log = False
-                obj_comment = '-'
-                obj_options = ''
+                obj_name = ''
                 obj_entries = ''
                 obj_edit = edit(command, True)
             if inedit:
+                pattern = False
+                status = False
+                lang = False
                 action = False
-                log = False
                 if not obj_entries == '': obj_entries += '\n'
-                obj_entries += 'Edit: ' + edit(command, quote=True) + '\n'
+                obj_entries += 'Edit: ' + edit(command, quote=False) + '\n'
             inedit = True
             
         elif command[0] == 'set':
 
-            if command[1] == 'deep-app-inspection': obj_options += set(command, 'Deep App Inspect:', newline=True, case='upper')
+            if command[1] == 'name': obj_name = set(command, quote=True)
 
-            if command[1] == 'other-application-log:': obj_options += set(command, 'Other App Log', newline=True, case='upper')
+            if command[1] == 'pattern-type':
+                obj_entries += set(command, 'Pattern Type:', newline=True, case='upper')
+                pattern = True
 
-            if command[1] == 'unknown-application-action': obj_options += set(command, 'Unknow App Action:', newline=True, case='upper')
-            
-            if command[1] == 'options': obj_options += set(command, 'Other Options:', tab=False, tab_len=15, newline=True, case='upper')
+            if command[1] == 'status':
+                obj_entries += set(command, 'Status:', newline=True, case='upper')
+                status = True
 
-            if command[1] == 'application': obj_entries += set(command, 'Applications:', newline=True)
+            if command[1] == 'lang':
+                obj_entries += set(command, 'Laguage:', newline=True, case='upper')
+                lang = True
             
             if command[1] == 'action':
                 obj_entries += set(command, 'Action:', newline=True, case='upper')
                 action = True
             
-            if command[1] == 'log':
-                obj_entries += set(command, 'Log:', newline=True, case='upper')
-                log = True
-            
-            if command[1] == 'category': obj_entries += set(command, 'Category:', tab=False, tab_len=5, newline=True)
-            
-            if command[1] == 'comment': obj_options += set(command, 'Comment:', newline=True)
-
         line = In.readline() # Le a proxima linha
