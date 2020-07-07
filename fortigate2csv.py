@@ -32,24 +32,26 @@ def set(cli: list, header: str = None, quote: bool = False, tab: bool = False, t
 
     for x in range(2, len(cli)):
         if cli[x].endswith('"'):
-            if len(cli) > 3 and bol_tab== True:
+            if len(cli) > 3 and bol_tab == True:
                 str_var += str_tab
-            str_var += cli[x].replace('"', '')
-            if newline == True: str_var += '\n'
+            if case == 'upper': str_var += cli[x].replace('"', '').upper()
+            if case == 'capitalize': str_var += cli[x].replace('"', '').capitalize()
+            if case == None: str_var += cli[x].replace('"', '')
+            if newline: str_var += '\n'
             if tab == True: bol_tab = True
         else:
-            str_var += cli[x].replace('"', '')
-            if len(cli) <= 3:
-                if newline == True: str_var += '\n'
-            else:
+            if case == 'upper': str_var += cli[x].replace('"', '').upper()
+            if case == 'capitalize': str_var += cli[x].replace('"', '').capitalize()
+            if case == None: str_var += cli[x].replace('"', '')
+            if not len(cli) <= 3:
                 str_var += ' '
             bol_tab = False
     
-    #if newline == True: str_var += '\n'
+    str_var
 
-    if case == 'upper': return str_var.upper()
-    if case == 'capitalize': return str_var.capitalize()
-    if case == None: return str_var
+    if newline == True: str_var += '\n'
+
+    return str_var
 
 def write(output_file: str, array: list, debug: bool = False) :
     line = ''
